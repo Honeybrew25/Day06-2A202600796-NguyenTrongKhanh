@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MyVinpearl — AI Gợi Ý Gói Nghỉ Dưỡng</title>
+<style>
+  :root{
+    --teal:#0a7d6b; --teal-d:#065d50; --gold:#c9a14a; --bg:#f4f7f6;
+    --ink:#1c2b2a; --muted:#5d6f6d; --card:#ffffff; --line:#e2eae8; --warn:#b4621a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{background:linear-gradient(120deg,var(--teal),var(--teal-d));color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;opacity:.85;font-size:13px}
+  .wrap{max-width:920px;margin:0 auto;padding:20px}
+  .keybar{background:#fff7e6;border:1px solid #f0dca0;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .keybar input{flex:1;min-width:220px;padding:7px 10px;border:1px solid var(--line);border-radius:8px}
+  .keybar select{padding:7px 10px;border:1px solid var(--line);border-radius:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  label{display:block;font-weight:600;font-size:13px;margin-bottom:5px}
+  input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit}
+  .btn{background:var(--teal);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-size:15px;font-weight:600;cursor:pointer}
+  .btn:hover{background:var(--teal-d)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chip{background:#eef5f3;border:1px solid var(--line);border-radius:20px;padding:6px 13px;font-size:13px;cursor:pointer}
+  .chip:hover{background:#dcebe8;border-color:var(--gold)}
+  .pkg{border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:12px;padding:15px;margin-bottom:12px;background:#fff}
+  .pkg h3{margin:0 0 4px;font-size:16px;color:var(--teal-d)}
+  .pkg .price{font-weight:700;color:var(--ink)}
+  .pkg .fit{float:right;font-size:12px;background:var(--teal);color:#fff;border-radius:20px;padding:3px 10px}
+  .pkg ul{margin:8px 0 0;padding-left:18px;font-size:13px}
+  .pkg .watch{color:var(--warn);font-size:13px;margin-top:8px}
+  .nomatch{border-left-color:var(--warn);background:#fdf1e6}
+  .muted{color:var(--muted);font-size:13px}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pathtag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:6px;margin-bottom:8px}
+  .p-happy{background:#e3f3ee;color:var(--teal-d)} .p-low{background:#fff3d6;color:#8a6a14}
+  .p-fail{background:#fbe3d2;color:var(--warn)} .p-corr{background:#e6ecfb;color:#324a9e}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌴 MyVinpearl — AI Gợi Ý Gói Nghỉ Dưỡng</h1>
+  <p>Trả lời 4 câu → AI gợi ý 2-3 gói phù hợp kèm lý do. Bạn là người quyết cuối (Augmentation).</p>
+</header>
+
+<div class="wrap">
+  <div class="keybar">
+    🔑 <input id="apiKey" type="password" placeholder="Dán OpenAI API key (sk-...) — chỉ lưu trên trình duyệt này" />
+    <select id="model">
+      <option value="gpt-4o-mini">gpt-4o-mini (nhanh, rẻ — demo)</option>
+      <option value="gpt-4o">gpt-4o (mạnh)</option>
+      <option value="gpt-4.1">gpt-4.1</option>
+      <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label>1. Đi với ai?</label>
+        <input id="who" type="text" placeholder="VD: gia đình 4 người (2 con nhỏ) / couple / nhóm bạn" />
+      </div>
+      <div>
+        <label>2. Ngân sách (mỗi đêm, khoảng)?</label>
+        <input id="budget" type="text" placeholder="VD: ~5 triệu/đêm / chưa rõ" />
+      </div>
+      <div>
+        <label>3. Mục đích chuyến đi?</label>
+        <input id="purpose" type="text" placeholder="VD: nghỉ dưỡng / vui chơi VinWonders-Safari / cả hai" />
+      </div>
+      <div>
+        <label>4. Ràng buộc / mong muốn riêng?</label>
+        <input id="constraint" type="text" placeholder="VD: gần biển, có hồ bơi trẻ em, cần đưa đón sân bay" />
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn" id="goBtn" onclick="recommend()">✨ Gợi ý gói cho tôi</button>
+      <span class="muted">Hoặc thử nhanh:</span>
+      <div class="chips" id="presets"></div>
+    </div>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+<script>
+// ---- Catalog gói Vinpearl (cho sẵn — AI CHỈ được chọn từ đây, không bịa) ----
+const CATALOG = [
+  {id:"PQ-FAM", name:"Vinpearl Resort & Spa Phú Quốc — Family Combo", location:"Phú Quốc",
+   priceFrom:4800000, goodFor:["gia đình","trẻ em","vui chơi"],
+   highlights:["Gần VinWonders & Vinpearl Safari","Hồ bơi & khu vui chơi trẻ em","Bãi biển riêng"],
+   includes:["Buffet sáng","Vé VinWonders 1 ngày"], conditions:"Vé Safari mua thêm. Hủy miễn phí trước 7 ngày.",
+   nearVinWonders:true, hasSafari:true, hasSpa:true, transfer:true},
+  {id:"PQ-LUX", name:"Vinpearl Phú Quốc — Beachfront Villa nghỉ dưỡng cao cấp", location:"Phú Quốc",
+   priceFrom:9500000, goodFor:["couple","nghỉ dưỡng","cao cấp"],
+   highlights:["Villa hồ bơi riêng","Spa & butler","Yên tĩnh, ít di chuyển"],
+   includes:["Buffet sáng","1 lần spa 60 phút","Đưa đón sân bay"], conditions:"Không phù hợp nhóm đông trẻ nhỏ.",
+   nearVinWonders:false, hasSafari:false, hasSpa:true, transfer:true},
+  {id:"NT-FAM", name:"Vinpearl Resort Nha Trang — Đảo Hòn Tre", location:"Nha Trang",
+   priceFrom:3900000, goodFor:["gia đình","vui chơi","tiết kiệm"],
+   highlights:["Cáp treo + VinWonders Nha Trang","Công viên nước","View vịnh"],
+   includes:["Buffet sáng","Vé VinWonders","Cáp treo khứ hồi"], conditions:"Di chuyển bằng cáp treo/tàu ra đảo.",
+   nearVinWonders:true, hasSafari:false, hasSpa:true, transfer:false},
+  {id:"NT-ECO", name:"Vinpearl Nha Trang — Gói tiết kiệm cuối tuần", location:"Nha Trang",
+   priceFrom:2600000, goodFor:["couple","tiết kiệm","nghỉ ngắn"],
+   highlights:["Giá tốt nhất","Gần trung tâm","Linh hoạt ngày"],
+   includes:["Buffet sáng"], conditions:"Không gồm vé VinWonders. Phòng tiêu chuẩn.",
+   nearVinWonders:false, hasSafari:false, hasSpa:false, transfer:false},
+  {id:"NHA-FAM", name:"Vinpearl Nam Hội An — Resort & công viên", location:"Hội An",
+   priceFrom:4200000, goodFor:["gia đình","văn hóa","vui chơi"],
+   highlights:["VinWonders Nam Hội An","Gần phố cổ Hội An","Show diễn văn hóa"],
+   includes:["Buffet sáng","Vé VinWonders"], conditions:"Cách sân bay Đà Nẵng ~45 phút.",
+   nearVinWonders:true, hasSafari:false, hasSpa:true, transfer:true},
+  {id:"HL-LUX", name:"Vinpearl Resort & Spa Hạ Long", location:"Hạ Long",
+   priceFrom:5200000, goodFor:["couple","nghỉ dưỡng","cảnh đẹp"],
+   highlights:["View vịnh Hạ Long","Trên đảo riêng","Spa"],
+   includes:["Buffet sáng","Đưa đón bến tàu"], conditions:"Ra đảo bằng tàu, lịch cố định.",
+   nearVinWonders:false, hasSafari:false, hasSpa:true, transfer:true}
+];
+
+const PRESETS = [
+  {label:"👨‍👩‍👧‍👦 Gia đình Phú Quốc (happy)", who:"gia đình 4 người, 2 con nhỏ 5 và 8 tuổi", budget:"~5 triệu/đêm", purpose:"nghỉ dưỡng + vui chơi VinWonders, Safari", constraint:"có khu vui chơi trẻ em, cần đưa đón sân bay"},
+  {label:"🤔 Mơ hồ (low-confidence)", who:"chưa biết, chắc đi với người yêu", budget:"chưa rõ", purpose:"đi đâu cũng được", constraint:""},
+  {label:"⚠️ Mâu thuẫn (failure)", who:"couple", budget:"dưới 2 triệu/đêm", purpose:"villa 5 sao có hồ bơi riêng, spa, gần mọi điểm vui chơi", constraint:"phải rẻ nhất"},
+  {label:"💸 Tiết kiệm Nha Trang", who:"nhóm 3 bạn", budget:"~3 triệu/đêm", purpose:"nghỉ dưỡng, đi chơi quanh trung tâm", constraint:"tiết kiệm, gần trung tâm, không cần sang"}
+];
+
+const SYSTEM_PROMPT = `Bạn là trợ lý tư vấn gói nghỉ dưỡng của MyVinpearl. Nhiệm vụ: dựa trên nhu cầu khách, gợi ý 2-3 gói PHÙ HỢP NHẤT.
+
+QUY TẮC BẮT BUỘC:
+1. CHỈ được chọn từ danh sách gói (catalog) cho sẵn dưới đây. TUYỆT ĐỐI không bịa gói, tên, giá, hay quyền lợi không có trong catalog.
+2. Nếu nhu cầu khách QUÁ MƠ HỒ để gợi ý có ý nghĩa (vd không rõ ngân sách lẫn mục đích lẫn nhóm đi) → dùng mode "ask_followup", hỏi đúng 1 câu chốt quan trọng nhất. Đừng đoán bừa.
+3. Chỉ dùng mode "no_match" khi yêu cầu THỰC SỰ MÂU THUẪN / BẤT KHẢ THI (vd đòi villa 5 sao có spa nhưng ngân sách dưới 2 triệu) — giải thích ngắn vì sao + đề xuất nới tiêu chí (relax_suggestion). Nếu chỉ LỆCH NHẸ (hơi quá ngân sách, hoặc một tiêu chí phụ không khớp như gần trung tâm/loại nhóm), VẪN "recommend" gói gần nhất nhưng nêu rõ điểm chưa khớp trong watch_out. KHÔNG bịa gói.
+4. Khi gợi ý được → mode "recommend", mỗi gói nêu why (vì sao hợp NHU CẦU NÀY), key_benefits (lấy từ includes/highlights), watch_out (điều kiện cần lưu ý từ conditions), fit_score 0-100.
+5. Trả lời tiếng Việt, ngắn gọn, trung thực. Luôn nhớ user là người quyết cuối — bạn chỉ tư vấn.
+
+CATALOG (JSON):
+` + JSON.stringify(CATALOG, null, 0);
+
+const TOOL = {
+  type: "function",
+  function: {
+    name: "present_advice",
+    description: "Trình bày lời tư vấn gói nghỉ dưỡng cho khách.",
+    parameters: {
+      type: "object",
+      properties: {
+        mode: {type:"string", enum:["recommend","ask_followup","no_match"]},
+        followup_question: {type:"string", description:"Chỉ khi mode=ask_followup"},
+        no_match_message: {type:"string", description:"Chỉ khi mode=no_match: vì sao chưa khớp"},
+        relax_suggestion: {type:"string", description:"Chỉ khi mode=no_match: nên nới tiêu chí nào"},
+        recommendations: {
+          type:"array",
+          items:{type:"object", properties:{
+            package_id:{type:"string"}, why:{type:"string"},
+            key_benefits:{type:"array", items:{type:"string"}},
+            watch_out:{type:"string"}, fit_score:{type:"number"}
+          }, required:["package_id","why","key_benefits","watch_out","fit_score"]}
+        }
+      },
+      required:["mode"]
+    }
+  }
+};
+
+// ---- UI helpers ----
+function setForm(p){who.value=p.who;budget.value=p.budget;purpose.value=p.purpose;constraint.value=p.constraint;}
+const presetsEl=document.getElementById("presets");
+PRESETS.forEach(p=>{const c=document.createElement("span");c.className="chip";c.textContent=p.label;c.onclick=()=>setForm(p);presetsEl.appendChild(c);});
+const who=document.getElementById("who"),budget=document.getElementById("budget"),purpose=document.getElementById("purpose"),constraint=document.getElementById("constraint");
+const apiKey=document.getElementById("apiKey"),modelSel=document.getElementById("model"),resultEl=document.getElementById("result"),goBtn=document.getElementById("goBtn");
+apiKey.value=localStorage.getItem("openai_key")||"";
+apiKey.onchange=()=>localStorage.setItem("openai_key",apiKey.value);
+
+function pkgById(id){return CATALOG.find(p=>p.id===id);}
+function vnd(n){return n.toLocaleString("vi-VN")+"đ/đêm";}
+
+// ---- Gọi OpenAI API ----
+async function callOpenAI(userCriteria, correction){
+  const key=apiKey.value.trim();
+  if(!key){alert("Hãy dán OpenAI API key trước.");return null;}
+  let userMsg = `Nhu cầu khách:\n- Đi với ai: ${userCriteria.who||"(trống)"}\n- Ngân sách: ${userCriteria.budget||"(trống)"}\n- Mục đích: ${userCriteria.purpose||"(trống)"}\n- Ràng buộc: ${userCriteria.constraint||"(trống)"}`;
+  if(correction) userMsg += `\n\nKhách vừa CHỈNH yêu cầu: "${correction}". Hãy cập nhật gợi ý và giải thích vì sao gói mới hợp hơn.`;
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      "content-type":"application/json",
+      "authorization":"Bearer "+key
+    },
+    body:JSON.stringify({
+      model:modelSel.value,
+      max_tokens:1200,
+      messages:[
+        {role:"system", content:SYSTEM_PROMPT},
+        {role:"user", content:userMsg}
+      ],
+      tools:[TOOL],
+      tool_choice:{type:"function", function:{name:"present_advice"}}
+    })
+  });
+  const data = await res.json();
+  if(data.error){throw new Error(data.error?.message||"API error");}
+  const call=data.choices?.[0]?.message?.tool_calls?.[0];
+  if(!call) throw new Error("Không nhận được kết quả có cấu trúc từ AI.");
+  try{ return JSON.parse(call.function.arguments); }
+  catch(e){ throw new Error("AI trả JSON không hợp lệ: "+call.function.arguments); }
+}
+
+let lastCriteria=null;
+async function recommend(correction){
+  const criteria = correction ? lastCriteria : {who:who.value,budget:budget.value,purpose:purpose.value,constraint:constraint.value};
+  lastCriteria = criteria;
+  goBtn.disabled=true;
+  resultEl.innerHTML=`<div class="card"><span class="spinner" style="border-color:var(--teal);border-top-color:transparent"></span> AI đang phân tích nhu cầu…</div>`;
+  try{
+    const out = await callOpenAI(criteria, correction);
+    render(out);
+  }catch(e){
+    resultEl.innerHTML=`<div class="card nomatch"><b>Lỗi gọi AI:</b> ${e.message}<br><span class="muted">Kiểm tra API key / mạng rồi thử lại.</span></div>`;
+  }finally{goBtn.disabled=false;}
+}
+
+function render(out){
+  let html="";
+  if(out.mode==="ask_followup"){
+    html=`<div class="card"><div class="pathtag p-low">Low-confidence path</div>
+      <p>🤔 ${out.followup_question||"Bạn cho mình hỏi thêm 1 chút nhé?"}</p>
+      <input type="text" id="fu" placeholder="Trả lời ngắn rồi Enter…" style="width:100%;padding:9px;border:1px solid var(--line);border-radius:8px" />
+      </div>`;
+    resultEl.innerHTML=html;
+    document.getElementById("fu").addEventListener("keydown",e=>{if(e.key==="Enter"){recommend("Trả lời câu hỏi vừa rồi: "+e.target.value);}});
+    return;
+  }
+  if(out.mode==="no_match"){
+    html=`<div class="card"><div class="pathtag p-fail">Failure path</div>
+      <p>⚠️ <b>Chưa có gói nào khớp.</b> ${out.no_match_message||""}</p>
+      <p class="muted">💡 Gợi ý: ${out.relax_suggestion||"Thử nới ngân sách hoặc giảm bớt yêu cầu."}</p>
+      ${corrBar()}</div>`;
+    resultEl.innerHTML=html; return;
+  }
+  // recommend
+  let cards=(out.recommendations||[]).map(r=>{
+    const p=pkgById(r.package_id);
+    if(!p) return "";
+    return `<div class="pkg"><span class="fit">phù hợp ${Math.round(r.fit_score)}%</span>
+      <h3>${p.name}</h3>
+      <div class="price">${vnd(p.priceFrom)} · 📍${p.location}</div>
+      <p style="margin:8px 0 4px"><b>Vì sao hợp bạn:</b> ${r.why}</p>
+      <ul>${(r.key_benefits||[]).map(b=>`<li>${b}</li>`).join("")}</ul>
+      <div class="watch">⚠️ Lưu ý: ${r.watch_out}</div></div>`;
+  }).join("");
+  html=`<div class="card"><div class="pathtag p-happy">Happy path · AI gợi ý — bạn quyết cuối</div>
+    ${cards||"<p>(AI không trả gói nào)</p>"}
+    ${corrBar()}</div>`;
+  resultEl.innerHTML=html;
+}
+
+function corrBar(){
+  return `<div style="margin-top:14px"><div class="pathtag p-corr">Correction path</div>
+    <div class="muted">Chưa ưng? Chỉnh nhanh:</div>
+    <div class="chips">
+      <span class="chip" onclick="recommend('Muốn rẻ hơn')">💸 Rẻ hơn</span>
+      <span class="chip" onclick="recommend('Muốn gần VinWonders / có Safari')">🎢 Thêm VinWonders/Safari</span>
+      <span class="chip" onclick="recommend('Muốn ít di chuyển, yên tĩnh nghỉ dưỡng')">🧘 Ít di chuyển, yên tĩnh</span>
+      <span class="chip" onclick="recommend('Muốn cao cấp hơn, có spa')">✨ Cao cấp hơn</span>
+    </div></div>`;
+}
+</script>
+</body>
+</html>

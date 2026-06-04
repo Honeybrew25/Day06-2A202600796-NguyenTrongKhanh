@@ -132,4 +132,3 @@ Decision fatigue / bỏ dở booking                      ▼
 - [x] Sketch có as-is và to-be.
 - [x] Có một câu nói rõ finding này sẽ đổi gì trong SPEC.
 
-**Finding này sẽ đổi gì trong SPEC:** build slice của nhóm nên tập trung vào **low-confidence path cho user chưa biết chọn gói nghỉ dưỡng Vinpearl** — AI hỏi 3-4 câu rồi gợi ý 2-3 package phù hợp kèm lý do và điều kiện cần lưu ý, thay vì làm lại toàn bộ app booking. Đây chính là 1 user · 1 task · 1 AI decision · 1 output để đưa vào Thin SPEC.
